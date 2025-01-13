@@ -1,4 +1,5 @@
-"use client"
+// src/contexts/auth-context.tsx
+"use client";
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';

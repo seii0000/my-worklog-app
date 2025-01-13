@@ -1,34 +1,37 @@
+// src/app/(auth)/login/page.tsx
 "use client";
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { z } from 'zod';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
-const loginSchema = z.object({
-  email: z.string().email('Email không hợp lệ'),
-  password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
-});
+import { signInWithGoogle } from '@/services/authService';
+import { useAuth } from '@/contexts/auth-context';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
-  const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: zodResolver(loginSchema),
-  });
+  const { user, loading } = useAuth();
 
-  const onSubmit = async (data: any) => {
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
+
+  const handleGoogleSignIn = async () => {
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
+      await signInWithGoogle();
+      console.log("Redirecting to dashboard...");
       router.push('/dashboard');
     } catch (error) {
-      setError('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+      console.error("Error during Google sign in: ", (error as Error).message);
+      setError(`Đăng nhập bằng Google thất bại: ${(error as Error).message}`);
     }
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center">
@@ -36,43 +39,17 @@ export default function LoginPage() {
         <div>
           <h2 className="text-2xl font-bold text-center">Đăng nhập</h2>
         </div>
-        
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium">Email</label>
-            <input
-              {...register('email')}
-              type="email"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-            />
-            {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email.message as string}</p>
-            )}
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium">Mật khẩu</label>
-            <input
-              {...register('password')}
-              type="password"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-            />
-            {errors.password && (
-              <p className="text-red-500 text-sm mt-1">{errors.password.message as string}</p>
-            )}
-          </div>
+        {error && (
+          <p className="text-red-500 text-sm">{error}</p>
+        )}
 
-          {error && (
-            <p className="text-red-500 text-sm">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-          >
-            Đăng nhập
-          </button>
-        </form>
+        <button
+          onClick={handleGoogleSignIn}
+          className="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 mt-4"
+        >
+          Đăng nhập với Google
+        </button>
 
         <div className="text-center">
           <Link href="/register" className="text-blue-600 hover:underline">

@@ -1,19 +1,12 @@
 // src/app/layout.tsx
 import { AuthProvider } from '@/contexts/auth-context';
-import '@/app/globals.css'
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+import { AppProps } from 'next/app';
+
+export default function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <html lang="en">
-      <body>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
-      </body>
-    </html>
+    <AuthProvider>
+      <Component {...pageProps} />
+    </AuthProvider>
   );
 }
